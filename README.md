@@ -4,6 +4,31 @@
 
 This pipeline is based on the original [YAMP](https://github.com/alesssia/YAMP) repo. Modifications have been made to make use of our infrastrucutre more readily. If you're here for a more customizable and flexible pipeline, please consider taking a look at the original repo.
 
+## Databases
+
+### Contaminants
+
+You'll need an instance with at least 24GB of RAM.
+
+```{bash}
+cd /mnt/efs/databases/contaminants
+wget https://zenodo.org/record/4629921/files/hg19_main_mask_ribo_animal_allplant_allfungus.fa.gz # or latest url
+docker container run \
+    --volume $PWD:$PWD \
+    --workdir $PWD \
+    -it \
+    --rm \
+    quay.io/biocontainers/bbmap:38.87--h1296035_0 \
+    bbmap.sh -Xmx24G ref=hg19_main_mask_ribo_animal_allplant_allfungus.fa.gz
+```
+
+Update the nextflow config to indicate that a pre-indexed contaminant genome is available, by making the following update
+
+```{bash}
+foreign_genome = ""
+foreign_genome_ref = "/mnt/efs/databases/contaminants"
+```
+
 ## Usage
 
 ```{bash}

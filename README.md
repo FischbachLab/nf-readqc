@@ -34,7 +34,7 @@ foreign_genome_ref = "/mnt/efs/databases/contaminants"
 ```{bash}
 aws batch submit-job \
     --profile maf \
-    --job-name nf-readqc-0825-3 \
+    --job-name nf-readqc-1210-1 \
     --job-queue default-maf-pipelines \
     --job-definition nextflow-production \
     --container-overrides command=s3://nextflow-pipelines/nf-readqc,\
@@ -42,8 +42,8 @@ aws batch submit-job \
 "--prefix","paired_end_QC",\
 "--singleEnd","false",\
 "--dedupe","true",\
-"--reads1","s3://nextflow-pipelines/nf-readqc/data/test_data/random_ncbi_reads_with_duplicated_and_contaminants_R1.fastq.gz",\
-"--reads2","s3://nextflow-pipelines/nf-readqc/data/test_data/random_ncbi_reads_with_duplicated_and_contaminants_R2.fastq.gz"
+"--reads1","s3://czb-seqbot/fastqs/200817_NB501938_0185_AH23FNBGXG/MITI_Purification_Healthy/E8_SH0000236_0619-Cult-2-481_S22_R1_001.fastq.gz",\
+"--reads2","s3://czb-seqbot/fastqs/200817_NB501938_0185_AH23FNBGXG/MITI_Purification_Healthy/E8_SH0000236_0619-Cult-2-481_S22_R2_001.fastq.gz"
 ```
 
 ### Local Test

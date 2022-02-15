@@ -1,6 +1,6 @@
 id: 'deduplication'
-section_name: 'YAMP Deduplication'
-section_href: 'https://github.com/alesssia/yamp'
+section_name: 'nf-readqc Deduplication'
+section_href: 'https://github.com/nuancedhealth/nf-readqc'
 plot_type: 'html'
 description: 'This information is collected at run time from the software output.'
 data: |

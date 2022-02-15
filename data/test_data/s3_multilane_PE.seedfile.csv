@@ -1,0 +1,5 @@
+sampleName,Reads
+TEST_multilanePE,s3://nh-pipelines/nf-readqc/data/test_data/random_ncbi_reads_with_duplicated_and_contaminants_L001_R1_S001.fastq.gz
+TEST_multilanePE,s3://nh-pipelines/nf-readqc/data/test_data/random_ncbi_reads_with_duplicated_and_contaminants_L001_R2_S001.fastq.gz
+TEST_multilanePE,s3://nh-pipelines/nf-readqc/data/test_data/random_ncbi_reads_with_duplicated_and_contaminants_L002_R1_S001.fastq.gz
+TEST_multilanePE,s3://nh-pipelines/nf-readqc/data/test_data/random_ncbi_reads_with_duplicated_and_contaminants_L002_R2_S001.fastq.gz

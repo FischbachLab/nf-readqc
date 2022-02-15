@@ -35,7 +35,7 @@ foreign_genome_ref = "/mnt/efs/databases/contaminants"
 aws batch submit-job \
     --profile maf \
     --job-name nf-readqc-1210-1 \
-    --job-queue default-maf-pipelines \
+    --job-queue priority-maf-pipelines \
     --job-definition nextflow-production \
     --container-overrides command=s3://nextflow-pipelines/nf-readqc,\
 "--outdir","s3://genomics-workflow-core/Results/ReadQC/00_tests",\

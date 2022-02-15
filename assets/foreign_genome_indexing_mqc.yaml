@@ -1,6 +1,6 @@
 id: 'indexing-foreign-genome'
-section_name: 'YAMP Indexing Foreign (pan)genome'
-section_href: 'https://github.com/alesssia/yamp'
+section_name: 'nf-readqc Indexing Foreign (pan)genome'
+section_href: 'https://github.com/nuancedhealth/nf-readqc'
 plot_type: 'html'
 description: 'This information is collected at run time from the software output.'
 data: |

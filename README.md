@@ -45,7 +45,7 @@ aws batch submit-job \
 "--seedfile","s3://nextflow-pipelines/nf-readqc/data/test_data/s3_multilane_PE.seedfile.csv"
 ```
 
-*NOTE:* the seedfile MUST be present on S3 before executing the above command.
+**NOTE: the seedfile MUST be present on S3 before executing the above command.**
 
 - Using `--reads` flag for a multilane single ended sample
 

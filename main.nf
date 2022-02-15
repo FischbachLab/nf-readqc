@@ -94,11 +94,17 @@ if (params.qin != 33 && params.qin != 64) {
 // fixes #1
 workingpath = params.outdir + "/" + params.project
 workingdir = file(workingpath)
+
 if( !workingdir.exists() ) {
     if( !workingdir.mkdirs() )     {
         exit 1, "Cannot create working directory: $workingpath"
     } 
 }    
+
+if(params.prefix){
+    workingpath = workingpath + "/" + params.prefix
+}
+
 
 //
 if (params.reads && params.seedfile){
@@ -384,7 +390,6 @@ Channel.fromPath( "${params.adapters}", checkIfExists: true ).set { adapters }
 process trim {
     tag "$name"
     
-    //Enable multicontainer settings
     container params.docker_container_bbmap
     
     input:

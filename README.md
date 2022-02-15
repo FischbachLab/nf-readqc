@@ -22,7 +22,7 @@ docker container run \
     bbmap.sh -Xmx24G ref=hg19_main_mask_ribo_animal_allplant_allfungus.fa.gz
 ```
 
-Update the nextflow config to indicate that a pre-indexed contaminant genome is available, by making the following update
+Update the nextflow config to indicate that a pre-indexed contaminant genome is available, by making the following updates
 
 ```{bash}
 foreign_genome = ""
@@ -31,28 +31,55 @@ foreign_genome_ref = "/mnt/efs/databases/contaminants"
 
 ## Usage
 
+- Preferred usage (`--seedfile`)
+
 ```{bash}
 aws batch submit-job \
-    --profile maf \
-    --job-name nf-readqc-1210-1 \
+    --job-name nf-readqc_mlpe_test \
     --job-queue priority-maf-pipelines \
-    --job-definition nextflow-production \
+    --job-definition nextflow-development \
     --container-overrides command=s3://nextflow-pipelines/nf-readqc,\
-"--outdir","s3://genomics-workflow-core/Results/ReadQC/00_tests",\
-"--prefix","paired_end_QC",\
+"--project","00_TEST",\
+"--prefix","20220215_multilane_PE",\
 "--singleEnd","false",\
-"--dedupe","true",\
-"--reads1","s3://czb-seqbot/fastqs/200817_NB501938_0185_AH23FNBGXG/MITI_Purification_Healthy/E8_SH0000236_0619-Cult-2-481_S22_R1_001.fastq.gz",\
-"--reads2","s3://czb-seqbot/fastqs/200817_NB501938_0185_AH23FNBGXG/MITI_Purification_Healthy/E8_SH0000236_0619-Cult-2-481_S22_R2_001.fastq.gz"
+"--seedfile","s3://nextflow-pipelines/nf-readqc/data/test_data/s3_multilane_PE.seedfile.csv"
 ```
 
-### Local Test
+*NOTE:* the seedfile MUST be present on S3 before executing the above command.
+
+- Using `--reads` flag for a multilane single ended sample
 
 ```{bash}
-nextflow run . \
---outdir s3://gwfcore-results/Results/ReadQC/00_tests \
---prefix paired_end_QC \
---singleEnd false \
---reads1 s3://nextflow-pipelines/nf-readqc/data/test_data/random_ncbi_reads_with_duplicated_and_contaminants_R1.fastq.gz \
---reads2 s3://nextflow-pipelines/nf-readqc/data/test_data/random_ncbi_reads_with_duplicated_and_contaminants_R2.fastq.gz
+aws batch submit-job \
+    --job-name nf-readqc_mlse_test \
+    --job-queue priority-maf-pipelines \
+    --job-definition nextflow-development \
+    --container-overrides command=s3://nextflow-pipelines/nf-readqc,\
+"--project","00_TEST",\
+"--prefix","20220215_multilane_SE",\
+"--singleEnd","true",\
+"--reads","s3://nextflow-pipelines/nf-readqc/data/test_data/random_ncbi_reads_with_duplicated_and_contaminants*_R1_*.fastq.gz"
+```
+
+- Using `--reads` flag for single lane paired end sample
+
+```{bash}
+aws batch submit-job \
+    --job-name nf-readqc_slpe_test \
+    --job-queue priority-maf-pipelines \
+    --job-definition nextflow-development \
+    --container-overrides command=s3://nextflow-pipelines/nf-readqc,\
+"--project","00_TEST",\
+"--prefix","20220215_singlelane_PE",\
+"--singleEnd","false",\
+"--reads","'s3://czb-seqbot/fastqs/200817_NB501938_0185_AH23FNBGXG/MITI_Purification_Healthy/E8_SH0000236_0619-Cult-2-481*_R{1,2}_*.fastq.gz'" 
+```
+
+## Updating the pipeline
+
+Simply updating the github repo will NOT update the pipeline. The repo also needs to be synced with it's S3 location:
+
+```{bash}
+cd nf-readqc
+aws s3 sync . s3://nextflow-pipelines/nf-readqc --exclude ".git/*" --delete
 ```

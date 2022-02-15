@@ -37,7 +37,7 @@ foreign_genome_ref = "/mnt/efs/databases/contaminants"
 aws batch submit-job \
     --job-name nf-readqc_mlpe_test \
     --job-queue priority-maf-pipelines \
-    --job-definition nextflow-development \
+    --job-definition nextflow-production \
     --container-overrides command=s3://nextflow-pipelines/nf-readqc,\
 "--project","00_TEST",\
 "--prefix","20220215_multilane_PE",\
@@ -53,7 +53,7 @@ aws batch submit-job \
 aws batch submit-job \
     --job-name nf-readqc_mlse_test \
     --job-queue priority-maf-pipelines \
-    --job-definition nextflow-development \
+    --job-definition nextflow-production \
     --container-overrides command=s3://nextflow-pipelines/nf-readqc,\
 "--project","00_TEST",\
 "--prefix","20220215_multilane_SE",\
@@ -67,7 +67,7 @@ aws batch submit-job \
 aws batch submit-job \
     --job-name nf-readqc_slpe_test \
     --job-queue priority-maf-pipelines \
-    --job-definition nextflow-development \
+    --job-definition nextflow-production \
     --container-overrides command=s3://nextflow-pipelines/nf-readqc,\
 "--project","00_TEST",\
 "--prefix","20220215_singlelane_PE",\

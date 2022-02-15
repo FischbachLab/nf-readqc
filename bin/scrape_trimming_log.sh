@@ -3,8 +3,8 @@
 
 # Dump to YAML (header)
 echo "id: 'trimming'"
-echo "section_name: 'YAMP Trimming'" 
-echo "section_href: 'https://github.com/alesssia/yamp'" 
+echo "section_name: 'nf-readqc Trimming'" 
+echo "section_href: 'https://github.com/nuancedhealth/nf-readqc'" 
 echo "plot_type: 'html'" 
 echo "description: 'This information is collected at run time from the software output.'" 
 echo "data: |" 

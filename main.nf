@@ -13,15 +13,15 @@ def helpMessage()
     log.info"""
 
 nf-readqc - Version: ${workflow.manifest.version} 
-
-  Usage: 
-  nextflow run nf-readqc.nf --reads1 R1 --reads2 R2 --prefix prefix --outdir path [options] 
   
   Mandatory arguments:
-    --reads1   R1      Forward (if paired-end) OR all reads (if single-end) file path
-    [--reads2] R2      Reverse reads file path (only if paired-end library layout)
-    --prefix   prefix  Prefix used to name the result files
-    --outdir   path    Output directory (will be outdir/prefix/)
+    --reads   path     A glob pattern like '/some/path/SampleName_*R{1,2}.fastq.gz' or '/some/path/SampleName_*_R1_*.fastq.gz'
+    --seedfile path     csv file with headers in the format "sampleName,Reads", 
+                        fwd and rev is interpreted based on the expression "_R{1,2}_" in the file name.
+                        lines with the same 'sampleName' are grouped together.
+    --prefix   prefix  Prefix used to name the result files (only used to name outputs when --reads flag is used)
+    --outdir   path    Output directory (will be outdir/project/)
+    --project   path    Project directory (will be used to group outputs of the same project)
   
   Main options:
     --singleEnd  <true|false>   whether the layout is single-end
@@ -85,19 +85,65 @@ if (params.qin != 33 && params.qin != 64) {
     exit 1, "Input quality offset (qin) not available. Choose either 33 (ASCII+33) or 64 (ASCII+64)" 
 }   
 
-//--reads2 can be omitted when the library layout is "single"
-if (!params.singleEnd && (params.reads2 == "null") ) {
-    exit 1, "If dealing with paired-end reads, please set the reads2 parameters\nif dealing with single-end reads, please set the '--singleEnd' option to 'true'"
-}
+// //--reads2 can be omitted when the library layout is "single"
+// if (!params.singleEnd && (params.reads2 == "null") ) {
+//     exit 1, "If dealing with paired-end reads, please set the reads2 parameters\nif dealing with single-end reads, please set the '--singleEnd' option to 'true'"
+// }
 
 //Creates working dir
-workingpath = params.outdir + "/" + params.prefix
+// fixes #1
+workingpath = params.outdir + "/" + params.project
 workingdir = file(workingpath)
 if( !workingdir.exists() ) {
     if( !workingdir.mkdirs() )     {
         exit 1, "Cannot create working directory: $workingpath"
     } 
 }    
+
+//
+if (params.reads && params.seedfile){
+   exit 1, "Input reads must be defined using either '--reads' or '--seedfile' parameter. Please choose one way"
+}
+
+if(params.seedfile){
+    Channel
+        .fromPath(params.seedfile)
+        .ifEmpty { exit 1, "Cannot find any seed file matching: ${params.seedfile}." }
+        .splitCsv(header:true)
+        .map{ row -> tuple(row.sampleName, file(row.Reads))}
+        .groupTuple(sort:true)
+        .set { reads_concat }
+} else {
+    Channel
+        .fromPath(params.reads)
+        .ifEmpty { exit 1, "Cannot find any reads matching: ${params.reads}." }
+        .map {it -> tuple(params.prefix, it)}
+        .groupTuple(sort:true)
+        .set { reads_concat }
+}
+
+// reads_concat.view()
+
+process concatenate {
+    tag "$id"
+
+    container params.docker_container_multiqc
+
+    // publishDir "${workingpath}", mode: 'copy', pattern: "*.merged.R{1,2}.fastq.gz"
+
+    input:
+    set val(id), file(read_files) from reads_concat
+
+    output:
+    tuple(id, file("${id}.merged.R{1,2}.fastq.gz")) into concat_fq 
+    
+    script:
+    """
+    concatenate_fastqs.py ${id} ${params.singleEnd} $read_files
+    """
+}
+
+concat_fq.into {read_files_fastqc; read_files_dedup; read_files_synthetic_contaminants}
 
 // Header log info
 log.info """---------------------------------------------
@@ -127,10 +173,6 @@ summary['Java Virtual Machine'] = System.getProperty("java.vm.name") + "(" + Sys
 summary['Operating system'] = System.getProperty("os.name") + " " + System.getProperty("os.arch") + " v" +  System.getProperty("os.version")
 summary['User name'] = System.getProperty("user.name") //User's account name
 
-// summary['Container Engine'] = workflow.containerEngine
-// if(workflow.containerEngine) summary['Container'] = workflow.container
-
-
 summary['BBmap'] = "quay.io/biocontainers/bbmap:38.87--h1296035_0"
 summary['FastQC'] = "quay.io/biocontainers/fastqc:0.11.9--0"
 
@@ -139,7 +181,7 @@ summary['MultiQC'] = "quay.io/biocontainers/multiqc:1.9--py_1"
 
 //General
 summary['Running parameters'] = ""
-summary['Reads'] = "[" + params.reads1 + ", " + params.reads2 + "]"
+summary['Reads'] = params.seedfile ? params.seedfile : params.reads
 summary['Prefix'] = params.prefix
 summary['Layout'] = params.singleEnd ? 'Single-End' : 'Paired-End'
 summary['Performing de-duplication'] = params.dedup
@@ -196,7 +238,7 @@ def create_workflow_summary(summary) {
     id: 'workflow-summary'
     description: "This information is collected when the pipeline is started."
     section_name: 'nf-readQC Workflow Summary'
-    section_href: 'https://github.com/fischbachlab/nf-readqc'
+    section_href: 'https://github.com/nuancedhealth/nf-readqc'
     plot_type: 'html'
     data: |
         <dl class=\"dl-horizontal\">
@@ -240,16 +282,6 @@ process get_software_versions {
     - read_files_trim   is used for the decontamination from synthetic contaminants (used only if
       deduplication is not run)
 */
-
-if (params.singleEnd) {
-    Channel
-    .from([[params.prefix, [file(params.reads1)]]])
-    .into { read_files_fastqc; read_files_dedup; read_files_synthetic_contaminants }
-} else {
-    Channel
-    .from([[params.prefix, [file(params.reads1), file(params.reads2)]]] )
-    .into { read_files_fastqc; read_files_dedup; read_files_synthetic_contaminants }
-}
 
 // ------------------------------------------------------------------------------   
 //    QUALITY CONTROL 
@@ -440,13 +472,13 @@ process decontaminate {
 
     container params.docker_container_bbmap
 
-    publishDir "${params.outdir}/${params.prefix}", mode: 'copy', pattern: "*QCd.fq.gz"
+    publishDir "${workingpath}/02_ReadQC_Output", mode: 'copy', pattern: "*.qcd.fq.gz"
 
     input:
     tuple path(ref_foreign_genome), val(name), file(reads) from ref_foreign_genome.combine(to_decontaminate)
 
     output:
-    tuple val(name), path("*_QCd.fq.gz") into qcd_reads
+    tuple val(name), path("*.qcd.fq.gz") into qcd_reads
     file "decontamination_mqc.yaml" into decontaminate_log
 
     script:
@@ -459,14 +491,40 @@ process decontaminate {
     #Sets the maximum memory to the value requested in the config file
     maxmem=\$(echo ${task.memory} | sed 's/ //g' | sed 's/B//g')
 
-    bbwrap.sh -Xmx\"\$maxmem\"  mapper=bbmap append=t $input $output minid=$params.mind maxindel=$params.maxindel bwr=$params.bwr bw=12 minhits=2 qtrim=rl trimq=$params.phred path="./" qin=$params.qin threads=${task.cpus} untrim quickmatch fast ow &> decontamination_mqc.txt
+    bbwrap.sh \\
+        -Xmx\"\$maxmem\"  \\
+        mapper=bbmap \\
+        append=t \\
+        $input \\
+        $output \\
+        minid=$params.mind \\
+        maxindel=$params.maxindel \\
+        bwr=$params.bwr \\
+        bw=12 \\
+        minhits=2 \\
+        qtrim=rl \\
+        trimq=$params.phred \\
+        path="./" \\
+        qin=$params.qin \\
+        threads=${task.cpus} \\
+        untrim \\
+        quickmatch \\
+        fast \\
+        ow &> decontamination_mqc.txt
+
+    if [ $params.singleEnd = true ]; then
+        # Rename
+        mv ${name}_QCd.fq.gz ${name}_R1.qcd.fq.gz
+    else
+        # Deinterleave
+        reformat.sh in=${name}_QCd.fq.gz out1=${name}_R1.qcd.fq.gz out2=${name}_R2.qcd.fq.gz
+    fi
 
     # MultiQC doesn't have a module for bbwrap yet. As a consequence, I
     # had to create a YAML file with all the info I need via a bash script
     bash scrape_decontamination_log.sh > decontamination_mqc.yaml
     """
 }
-
 
 // ------------------------------------------------------------------------------   
 //    QUALITY ASSESSMENT 
@@ -478,7 +536,7 @@ process quality_assessment {
     
     container params.docker_container_fastqc
     
-    publishDir "${params.outdir}/${params.prefix}/fastqc"
+    publishDir "${workingpath}/01_fastqc"
 
     input:
     set val(name), file(reads) from read_files_fastqc.mix(qcd_reads)
@@ -508,7 +566,7 @@ multiqc_config = file(params.multiqc_config)
 
 process log {
     
-    publishDir "${params.outdir}/${params.prefix}", mode: 'copy'
+    publishDir "${workingpath}", mode: 'copy'
 
     container params.docker_container_multiqc
 
@@ -534,3 +592,4 @@ process log {
     mv multiqc_data ${params.prefix}_multiqc_data
     """
 }
+

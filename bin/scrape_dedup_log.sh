@@ -11,8 +11,8 @@ time=$(grep "Total time:" dedup_mqc.txt | cut -d: -f 2 | cut -f 2 | sed 's/s\./s
 
 # Dump to YAML
 echo "id: 'deduplication'"
-echo "section_name: 'YAMP Deduplication'" 
-echo "section_href: 'https://github.com/alesssia/yamp'" 
+echo "section_name: 'nf-readqc Deduplication'" 
+echo "section_href: 'https://github.com/nuancedhealth/nf-readqc'" 
 echo "plot_type: 'html'" 
 echo "description: 'This information is collected at run time from the software output.'" 
 echo "data: |" 

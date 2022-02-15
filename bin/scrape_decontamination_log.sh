@@ -14,8 +14,8 @@ time1=$(grep "Total time:" decontamination_mqc.txt | head -1 | cut -d: -f 2 | cu
 
 # Dump to YAML
 echo "id: 'decontamination'" 
-echo "section_name: 'YAMP Decontamination'" 
-echo "section_href: 'https://github.com/alesssia/yamp'" 
+echo "section_name: 'nf-readqc Decontamination'" 
+echo "section_href: 'https://github.com/nuancedhealth/nf-readqc'" 
 echo "plot_type: 'html'" 
 echo "description: 'This information is collected at run time from the software output.'" 
 echo "data: |" 

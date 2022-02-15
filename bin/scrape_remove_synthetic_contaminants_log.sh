@@ -3,8 +3,8 @@
 
 # Dump to YAML (header)
 echo "id: 'synthetic-contaminants'" 
-echo "section_name: 'YAMP Remove synthetic contaminants'" 
-echo "section_href: 'https://github.com/alesssia/yamp'" 
+echo "section_name: 'nf-readqc Remove synthetic contaminants'" 
+echo "section_href: 'https://github.com/nuancedhealth/nf-readqc'" 
 echo "plot_type: 'html'" 
 echo "description: 'This information is collected at run time from the software output.'" 
 echo "data: |" 

@@ -16,7 +16,6 @@ wget https://zenodo.org/record/4629921/files/hg19_main_mask_ribo_animal_allplant
 docker container run \
     --volume $PWD:$PWD \
     --workdir $PWD \
-    -it \
     --rm \
     quay.io/biocontainers/bbmap:38.87--h1296035_0 \
     bbmap.sh -Xmx24G ref=hg19_main_mask_ribo_animal_allplant_allfungus.fa.gz

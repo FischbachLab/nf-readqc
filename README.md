@@ -28,6 +28,22 @@ foreign_genome = ""
 foreign_genome_ref = "/mnt/efs/databases/contaminants"
 ```
 
+### Seedfiles
+
+>The `seedfile` should be a __TWO__ column csv file with the following headers.
+
+```bash
+sampleName,Reads
+```
+
+It must also be stored on S3. Convention is to store the `seedfile` at the following location.
+
+```bash
+s3://genomics-workflow-core/Results/ReadQC/<PROJECT_ID>/00_seedfile/seedfile.csv
+```
+
+Using a `seedfile` is the preferred mode of using the pipeline as it allows us to save the input for the pipeline alongside the outputs.
+
 ## Usage
 
 - Preferred usage (`--seedfile`)
@@ -44,7 +60,7 @@ aws batch submit-job \
 "--seedfile","s3://nextflow-pipelines/nf-readqc/data/test_data/s3_multilane_PE.seedfile.csv"
 ```
 
-**NOTE: the seedfile MUST be present on S3 before executing the above command.**
+__NOTE: the seedfile MUST be present on S3 before executing the above command.__
 
 - Using `--reads` flag for a multilane single ended sample
 
